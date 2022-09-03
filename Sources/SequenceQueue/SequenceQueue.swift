@@ -1,28 +1,5 @@
 import Foundation
 
-public protocol SequenceItem {
-  var timeInterval: TimeInterval { get }
-  var workItem: () -> Void { get }
-}
-
-public protocol TimeSetable {
-  func setTime(time: TimeInterval)
-}
-
-public final class SequenceTask: SequenceItem, TimeSetable {
-  public var timeInterval: TimeInterval
-  public let workItem: () -> Void
-
-  public init(timeInterval: TimeInterval, workItem: @escaping () -> Void) {
-    self.timeInterval = timeInterval
-    self.workItem = workItem
-  }
-
-  public func setTime(time: TimeInterval) {
-    self.timeInterval += time
-  }
-}
-
 public final class SequenceQueue {
   public typealias T = TimeSetable & SequenceItem
 

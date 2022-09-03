@@ -34,10 +34,6 @@ public final class SequenceQueue {
 
   private var blocks: ContiguousArray<T>
 
-  private var count: Int {
-    blocks.count
-  }
-
   public init(@SerialBuilder serial: () -> ContiguousArray<T>) {
     self.blocks = serial()
   }

@@ -23,18 +23,27 @@ public final class SequenceTask: SequenceItem, TimeSetable {
   }
 }
 
-public final class SequenceQueue<T> where T: TimeSetable, T: SequenceItem {
+public final class SequenceQueue {
+  public typealias T = TimeSetable & SequenceItem
 
   @resultBuilder
-  public struct BlockBuilder<T> where T: TimeSetable, T: SequenceItem {
+  public struct SerialBuilder {
     public static func buildBlock(_ components: T...) -> ContiguousArray<T> {
-      var start = TimeInterval.zero
-      let new = components.map { item in
-        item.setTime(time: start)
-        start += item.timeInterval
+      var timeOffset = TimeInterval.zero
+      let appliedBlocks = components.map { item in
+        let divider = item.timeInterval == 0 ? 0.00000000001 : 0
+        item.setTime(time: timeOffset + divider)
+        timeOffset = item.timeInterval
         return item
       }
-      return ContiguousArray(new)
+      return ContiguousArray(appliedBlocks)
+    }
+  }
+
+  @resultBuilder
+  public struct ParallelBuilder {
+    public static func buildBlock(_ components: T...) -> ContiguousArray<T> {
+      return ContiguousArray(components)
     }
   }
 
@@ -52,10 +61,12 @@ public final class SequenceQueue<T> where T: TimeSetable, T: SequenceItem {
     blocks.count
   }
 
-  private var passedTime: TimeInterval = .zero
+  public init(@SerialBuilder serial: () -> ContiguousArray<T>) {
+    self.blocks = serial()
+  }
 
-  public init(@BlockBuilder<T> content: () -> ContiguousArray<T>) {
-    self.blocks = content()
+  public init(@ParallelBuilder parallel: () -> ContiguousArray<T>) {
+    self.blocks = parallel()
   }
 
   public func run() {
